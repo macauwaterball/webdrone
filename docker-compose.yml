@@ -8,7 +8,7 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: drone_soccer
       MYSQL_USER: dronesoccer
-      MYSQL_PASSWORD: Qweszxc!23
+      MYSQL_PASSWORD: dronepassword
     ports:
       - "3307:3306"
     volumes:
