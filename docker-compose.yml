@@ -43,7 +43,7 @@ services:
       DB_HOST: db
       DB_NAME: drone_soccer
       DB_USER: dronesoccer
-      DB_PASSWORD: Qweszxc!23
+      DB_PASSWORD: dronepassword
     networks:
       - app-network
 
