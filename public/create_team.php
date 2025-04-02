@@ -1,4 +1,10 @@
 <?php
+session_start();
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header('Location: index.php');
+    exit;
+}
+
 require_once 'db.php';
 
 // 處理表單提交
@@ -376,6 +382,26 @@ $teams = $pdo->query("SELECT * FROM teams ORDER BY created_at DESC")->fetchAll()
         });
         return false;
     }
+    function deleteTeam(teamId, teamName) {
+        if (confirm(`確定要刪除隊伍 "${teamName}" 嗎？`)) {
+            const form = new FormData();
+            form.append('action', 'delete_team');
+            form.append('team_id', teamId);
+    
+            fetch('create_team.php', {
+                method: 'POST',
+                body: form
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    }
     </script>
 </body>
-</html> 
+</html>

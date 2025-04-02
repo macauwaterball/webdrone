@@ -1,33 +1,16 @@
 version: '3.8'
 
 services:
-  db:
-    image: mysql:5.7
-    container_name: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: drone_soccer
-      MYSQL_USER: dronesoccer
-      MYSQL_PASSWORD: dronepassword
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - app-network
-
-  web:
+  nginx:
     build:
       context: .
       dockerfile: docker/nginx/Dockerfile
     ports:
-      - "9090:80"
+      - "80:80"
     volumes:
-      - .:/app/
-    links:
+      - ./public:/app/public
+    depends_on:
       - php
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - app-network
 
@@ -36,20 +19,35 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     volumes:
-      - .:/app/
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - ./public:/app/public
     environment:
-      DB_HOST: db
-      DB_NAME: drone_soccer
-      DB_USER: dronesoccer
-      DB_PASSWORD: dronepassword
+      - DB_HOST=db
+      - DB_NAME=drone_soccer
+      - DB_USER=dronesoccer
+      - DB_PASSWORD=Qweszxc!23
+    depends_on:
+      - db
     networks:
       - app-network
 
-volumes:
-  mysql_data:
+  db:
+    image: mysql:8.0
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_DATABASE=drone_soccer
+      - MYSQL_USER=dronesoccer
+      - MYSQL_PASSWORD=Qweszxc!23
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  mysql_data:

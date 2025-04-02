@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // 使用環境變量配置數據庫連接
-$host = getenv('DB_HOST') ?: 'db:3307';
+$host = getenv('DB_HOST') ?: 'db';  // 改為 db
 $dbname = getenv('DB_NAME') ?: 'drone_soccer';
 $username = getenv('DB_USER') ?: 'dronesoccer';
 $password = getenv('DB_PASSWORD') ?: 'Qweszxc!23';

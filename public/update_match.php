@@ -1,4 +1,10 @@
 <?php
+session_start();
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header('Location: index.php');
+    exit;
+}
+
 require_once 'db.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
@@ -30,6 +36,17 @@ try {
             $field = "team{$team}_score";
             $change = $data['score_change'];
             
+            // 檢查分數不會變成負數
+            $stmt = $pdo->prepare("SELECT $field as current_score FROM matches WHERE match_id = ?");
+            $stmt->execute([$match_id]);
+            $current = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($current['current_score'] + $change < 0) {
+                $response['error'] = '分數不能為負數';
+                echo json_encode($response);
+                exit;
+            }
+            
             $stmt = $pdo->prepare("UPDATE matches SET $field = $field + ? WHERE match_id = ?");
             $stmt->execute([$change, $match_id]);
             
@@ -42,6 +59,17 @@ try {
         if (isset($data['foul_change'])) {
             $field = "team{$team}_fouls";
             $change = $data['foul_change'];
+            
+            // 檢查犯規次數不會變成負數
+            $stmt = $pdo->prepare("SELECT $field as current_fouls FROM matches WHERE match_id = ?");
+            $stmt->execute([$match_id]);
+            $current = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($current['current_fouls'] + $change < 0) {
+                $response['error'] = '犯規次數不能為負數';
+                echo json_encode($response);
+                exit;
+            }
             
             $stmt = $pdo->prepare("UPDATE matches SET $field = $field + ? WHERE match_id = ?");
             $stmt->execute([$change, $match_id]);
@@ -59,4 +87,4 @@ try {
 }
 
 header('Content-Type: application/json');
-echo json_encode($response); 
+echo json_encode($response);
