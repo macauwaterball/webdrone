@@ -2,7 +2,9 @@
 session_start();
 require_once 'db.php';
 
-// 檢查是否已登入
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
     header('Location: list_matches.php');
     exit;
@@ -15,18 +17,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if (!empty($username) && !empty($password)) {
-        $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ?");
-        $stmt->execute([$username]);
-        $admin = $stmt->fetch();
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ? AND password = ?");
+            $stmt->execute([$username, $password]);
+            $admin = $stmt->fetch();
 
-        if ($admin && password_verify($password, $admin['password'])) {
-            $_SESSION['admin_logged_in'] = true;
-            $_SESSION['admin_id'] = $admin['admin_id'];
-            header('Location: list_matches.php');
-            exit;
-        } else {
+            if ($admin) {
+                $_SESSION['admin_logged_in'] = true;
+                $_SESSION['admin_id'] = $admin['admin_id'];
+                header('Location: list_matches.php');
+                exit;
+            }
             $error = '用戶名或密碼錯誤';
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage());
+            $error = '數據庫錯誤：' . $e->getMessage();
         }
+    } else {
+        $error = '請輸入用戶名和密碼';
     }
 }
 ?>

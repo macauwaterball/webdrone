@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: docker/nginx/Dockerfile
     ports:
-      - "80:80"
+      - "9090:80"
     volumes:
       - ./public:/app/public
     depends_on:
@@ -32,8 +32,13 @@ services:
 
   db:
     image: mysql:8.0
+    container_name: dronesoccer_db
+    restart: always
+    command: 
+      - --authentication-policy=*
+      - --host-cache-size=0
     ports:
-      - "3307:3306"
+      - "3306:3306"
     environment:
       - MYSQL_DATABASE=drone_soccer
       - MYSQL_USER=dronesoccer

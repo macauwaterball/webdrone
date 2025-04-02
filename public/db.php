@@ -2,25 +2,23 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// 使用環境變量配置數據庫連接
-$host = getenv('DB_HOST') ?: 'db';  // 改為 db
-$dbname = getenv('DB_NAME') ?: 'drone_soccer';
-$username = getenv('DB_USER') ?: 'dronesoccer';
-$password = getenv('DB_PASSWORD') ?: 'Qweszxc!23';
-$charset = 'utf8mb4';
-
-// PDO連接設定
-$dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
-$options = [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    PDO::ATTR_EMULATE_PREPARES => false,
-];
+$host = 'db';
+$dbname = 'drone_soccer';
+$username = 'dronesoccer';
+$password = 'Qweszxc!23';
 
 try {
+    $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
+    $options = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ];
+    
     $pdo = new PDO($dsn, $username, $password, $options);
 } catch (PDOException $e) {
-    die("連接失敗: " . $e->getMessage());
+    error_log("Database connection error: " . $e->getMessage());
+    die("無法連接到數據庫，請稍後再試");
 }
 
 // 創建小組表 (改名為 team_groups)
