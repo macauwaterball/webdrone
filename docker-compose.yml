@@ -24,7 +24,7 @@ services:
       - DB_HOST=db
       - DB_NAME=drone_soccer
       - DB_USER=dronesoccer
-      - DB_PASSWORD=Qweszxc!23
+      - DB_PASSWORD=password
     depends_on:
       - db
     networks:
@@ -37,7 +37,7 @@ services:
     environment:
       - MYSQL_DATABASE=drone_soccer
       - MYSQL_USER=dronesoccer
-      - MYSQL_PASSWORD=Qweszxc!23
+      - MYSQL_PASSWORD=passowrd
       - MYSQL_ROOT_PASSWORD=root
     volumes:
       - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
