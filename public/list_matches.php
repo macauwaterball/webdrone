@@ -1,5 +1,6 @@
 <?php
 session_start();
+// 檢查管理員登入狀態
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header('Location: index.php');
     exit;
@@ -7,17 +8,18 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 
 require_once 'db.php';
 
-// 獲取所有比賽，按組別和場次排序
-$stmt = $pdo->query("SELECT m.*, 
-                            t1.team_name as team1_name, 
-                            t2.team_name as team2_name,
-                            g.group_name
-                     FROM matches m
-                     JOIN teams t1 ON m.team1_id = t1.team_id
-                     JOIN teams t2 ON m.team2_id = t2.team_id
-                     LEFT JOIN team_groups g ON m.group_id = g.group_id
-                     ORDER BY g.group_name ASC, m.match_number DESC");
-$matches = $stmt->fetchAll();
+// 獲取所有比賽
+$query = "SELECT m.*, 
+    t1.team_name as team1_name, 
+    t2.team_name as team2_name,
+    g.group_name
+    FROM matches m
+    LEFT JOIN teams t1 ON m.team1_id = t1.team_id
+    LEFT JOIN teams t2 ON m.team2_id = t2.team_id
+    LEFT JOIN team_groups g ON m.group_id = g.group_id
+    ORDER BY m.created_at DESC";
+
+$matches = $pdo->query($query)->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -80,6 +82,9 @@ $matches = $stmt->fetchAll();
 
         <div class="list-section">
             <h2>比賽列表</h2>
+            <div class="export-section" style="margin-bottom: 20px; text-align: right;">
+                <a href="export_matches.php" class="button export-button" style="background-color: #2196F3;">匯出已完成比賽結果</a>
+            </div>
             <table class="match-list">
                 <thead>
                     <tr>
@@ -89,6 +94,7 @@ $matches = $stmt->fetchAll();
                         <th>隊伍2</th>
                         <th>比分</th>
                         <th>狀態</th>
+                        <th>獲勝隊伍</th>
                         <th>操作</th>
                     </tr>
                 </thead>
@@ -126,6 +132,10 @@ $matches = $stmt->fetchAll();
                         <td>
                             <?php if ($match['match_status'] === 'pending'): ?>
                                 <a href="dronesoccer.php?match_id=<?= $match['match_id'] ?>" class="button">進入比賽</a>
+                                <button onclick="deleteMatch(<?= $match['match_id'] ?>)" class="button delete-button">取消比賽</button>
+                            <?php elseif ($match['match_status'] === 'active'): ?>
+                                <a href="dronesoccer.php?match_id=<?= $match['match_id'] ?>" class="button">繼續比賽</a>
+                                <button onclick="completeMatch(<?= $match['match_id'] ?>)" class="button complete-button">完成比賽</button>
                             <?php else: ?>
                                 <a href="match_result.php?match_id=<?= $match['match_id'] ?>" class="button result-button">顯示結果</a>
                             <?php endif; ?>
@@ -137,4 +147,46 @@ $matches = $stmt->fetchAll();
         </div>
     </div>
 </body>
-</html> 
+</html>
+
+<script>
+function deleteMatch(matchId) {
+    if (confirm('確定要取消這場比賽嗎？')) {
+        fetch('delete_match.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'match_id=' + matchId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+}
+
+function completeMatch(matchId) {
+    if (confirm('確定要將這場比賽標記為已完成嗎？')) {
+        fetch('complete_match.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'match_id=' + matchId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+}
+</script>

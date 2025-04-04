@@ -24,9 +24,10 @@ services:
       - DB_HOST=db
       - DB_NAME=drone_soccer
       - DB_USER=dronesoccer
-      - DB_PASSWORD=password
+      - DB_PASSWORD=Qweszxc!23    # Changed to match MySQL password
     depends_on:
-      - db
+      db:
+        condition: service_healthy    # Added health check condition
     networks:
       - app-network
 
@@ -35,20 +36,26 @@ services:
     container_name: dronesoccer_db
     restart: always
     command: 
-      - --authentication-policy=*
-      - --host-cache-size=0
+      - --default-authentication-plugin=caching_sha2_password
+      - --authentication-policy=caching_sha2_password
     ports:
       - "3306:3306"
     environment:
       - MYSQL_DATABASE=drone_soccer
       - MYSQL_USER=dronesoccer
-      - MYSQL_PASSWORD=passowrd
+      - MYSQL_PASSWORD=Qweszxc!23
       - MYSQL_ROOT_PASSWORD=root
     volumes:
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - mysql_data:/var/lib/mysql
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "dronesoccer", "-pQweszxc!23"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s    # Added start period
 
 networks:
   app-network:

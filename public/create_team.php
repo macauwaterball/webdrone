@@ -397,7 +397,12 @@ $teams = $pdo->query("SELECT * FROM teams ORDER BY created_at DESC")->fetchAll()
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert(data.message);
+                    // 顯示更詳細的錯誤信息
+                    if (data.message.includes("該隊伍已參與比賽")) {
+                        alert("無法刪除：該隊伍已參與比賽。\n請先取消或完成該隊伍的所有比賽後再試。");
+                    } else {
+                        alert(data.message);
+                    }
                 }
             });
         }

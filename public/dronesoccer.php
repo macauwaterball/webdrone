@@ -323,14 +323,99 @@ $match = $stmt->fetch(PDO::FETCH_ASSOC);
 
         function showEndGameModal() {
             const modal = document.getElementById('endGameModal');
-            const score1 = document.getElementById('team1-score').textContent;
-            const score2 = document.getElementById('team2-score').textContent;
+            const score1 = parseInt(document.getElementById('team1-score').textContent);
+            const score2 = parseInt(document.getElementById('team2-score').textContent);
+            const fouls1 = parseInt(document.getElementById('team1-fouls').textContent);
+            const fouls2 = parseInt(document.getElementById('team2-fouls').textContent);
             
             document.getElementById('final-score1').textContent = score1;
             document.getElementById('final-score2').textContent = score2;
             
+            // 判斷勝負
+            let winner = '';
+            let needOvertime = false;
+            
+            if (score1 > score2) {
+                winner = '<?= htmlspecialchars($match['team1_name']) ?>';
+            } else if (score2 > score1) {
+                winner = '<?= htmlspecialchars($match['team2_name']) ?>';
+            } else {
+                // 得分相同，比較犯規次數
+                if (fouls1 < fouls2) {
+                    winner = '<?= htmlspecialchars($match['team1_name']) ?>';
+                } else if (fouls2 < fouls1) {
+                    winner = '<?= htmlspecialchars($match['team2_name']) ?>';
+                } else {
+                    // 得分和犯規都相同，需要加時
+                    needOvertime = true;
+                }
+            }
+
+            const modalContent = document.querySelector('.modal-content');
+            if (needOvertime) {
+                modalContent.innerHTML = `
+                    <div class="modal-title">比賽進入加時！</div>
+                    <div class="modal-score">
+                        <div><?= htmlspecialchars($match['team1_name']) ?>: ${score1} (犯規: ${fouls1})</div>
+                        <div><?= htmlspecialchars($match['team2_name']) ?>: ${score2} (犯規: ${fouls2})</div>
+                    </div>
+                    <p>得分和犯規次數相同，請進行加時賽</p>
+                    <button class="modal-button" onclick="continueMatch()">繼續比賽</button>
+                `;
+            } else {
+                modalContent.innerHTML = `
+                    <div class="modal-title">比賽結束！</div>
+                    <div class="modal-score">
+                        <div><?= htmlspecialchars($match['team1_name']) ?>: ${score1} (犯規: ${fouls1})</div>
+                        <div><?= htmlspecialchars($match['team2_name']) ?>: ${score2} (犯規: ${fouls2})</div>
+                    </div>
+                    <div class="winner-announcement">獲勝隊伍：${winner}</div>
+                    <button class="modal-button" onclick="closeModal()">確定</button>
+                `;
+            }
+            
             modal.style.display = 'block';
         }
+
+        function continueMatch() {
+            // 關閉模態框
+            document.getElementById('endGameModal').style.display = 'none';
+            // 重置計時器狀態
+            timerRunning = false;
+            clearInterval(timerInterval);
+            // 設置預設加時時間（3分鐘）
+            document.getElementById('minutes').value = 3;
+            document.getElementById('seconds').value = 0;
+            setCustomTime();
+            // 提示用戶設置時間
+            alert('請設置加時賽時間並點擊開始按鈕開始比賽');
+        }
+
+        // 刪除這段重複的代碼
+        /*
+            timeLeft = 180;
+            updateTimerDisplay();
+            // 自動開始計時
+            if (!timerRunning) {
+                toggleTimer();
+            }
+        }
+        */
+
+        // 添加樣式
+        const styles = `
+            .winner-announcement {
+                font-size: 24px;
+                color: #4CAF50;
+                margin: 20px 0;
+                font-weight: bold;
+            }
+        `;
+        
+        // 將樣式添加到頭部
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = styles;
+        document.head.appendChild(styleSheet);
 
         function closeModal() {
             fetch('update_match.php', {
@@ -371,4 +456,4 @@ $match = $stmt->fetch(PDO::FETCH_ASSOC);
         });
     </script>
 </body>
-</html> 
+</html>

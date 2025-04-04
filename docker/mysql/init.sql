@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS team_groups (
 -- 創建隊伍表
 CREATE TABLE IF NOT EXISTS teams (
     team_id INT AUTO_INCREMENT PRIMARY KEY,
-    team_name VARCHAR(100) NOT NULL UNIQUE,
+    team_name VARCHAR(100) NOT NULL,
     group_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (group_id) REFERENCES team_groups(group_id)
@@ -37,14 +37,18 @@ CREATE TABLE IF NOT EXISTS teams (
 -- 創建比賽表
 CREATE TABLE IF NOT EXISTS matches (
     match_id INT AUTO_INCREMENT PRIMARY KEY,
+    match_number INT NOT NULL,
     team1_id INT NOT NULL,
     team2_id INT NOT NULL,
     team1_score INT DEFAULT 0,
     team2_score INT DEFAULT 0,
     team1_fouls INT DEFAULT 0,
     team2_fouls INT DEFAULT 0,
-    match_status ENUM('pending', 'ongoing', 'completed') DEFAULT 'pending',
+    match_duration INT DEFAULT 600,
+    match_status ENUM('pending', 'active', 'completed') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    group_id INT,
     FOREIGN KEY (team1_id) REFERENCES teams(team_id),
-    FOREIGN KEY (team2_id) REFERENCES teams(team_id)
+    FOREIGN KEY (team2_id) REFERENCES teams(team_id),
+    FOREIGN KEY (group_id) REFERENCES team_groups(group_id)
 );
