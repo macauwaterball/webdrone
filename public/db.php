@@ -1,3 +1,4 @@
+
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -7,7 +8,7 @@ try {
     $dbname = getenv('DB_NAME') ?: 'drone_soccer';
     $username = getenv('DB_USER') ?: 'dronesoccer';
     $password = getenv('DB_PASSWORD') ?: 'Qweszxc!23';
-    
+
     $dsn = "mysql:host={$host};dbname={$dbname};charset=utf8mb4";
     $options = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -16,12 +17,12 @@ try {
         PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
         PDO::MYSQL_ATTR_SSL_CA => false
     ];
-    
+
     $pdo = new PDO($dsn, $username, $password, $options);
-    
+
     // 測試連接
     $pdo->query('SELECT 1');
-    
+
 } catch (PDOException $e) {
     error_log("Database connection error: " . $e->getMessage());
     die("無法連接到數據庫，請稍後再試");
@@ -33,6 +34,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS team_groups (
     group_name CHAR(1) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )");
+
 
 // 創建隊伍表
 $pdo->exec("CREATE TABLE IF NOT EXISTS teams (
@@ -69,3 +71,4 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS players (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (team_id) REFERENCES teams(team_id)
 )");
+

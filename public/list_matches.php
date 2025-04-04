@@ -130,14 +130,28 @@ $matches = $pdo->query($query)->fetchAll();
                             </span>
                         </td>
                         <td>
+                            <?php if ($match['match_status'] === 'completed'): ?>
+                                <?php
+                                $winner = '';
+                                if ($match['team1_score'] > $match['team2_score']) {
+                                    $winner = $match['team1_name'];
+                                } elseif ($match['team2_score'] > $match['team1_score']) {
+                                    $winner = $match['team2_name'];
+                                } elseif ($match['team1_fouls'] < $match['team2_fouls']) {
+                                    $winner = $match['team1_name'];
+                                } elseif ($match['team2_fouls'] < $match['team1_fouls']) {
+                                    $winner = $match['team2_name'];
+                                }
+                                echo '<span class="winner-name">' . htmlspecialchars($winner) . '</span>';
+                                ?>
+                            <?php endif; ?>
+                        </td>
+                        <td>
                             <?php if ($match['match_status'] === 'pending'): ?>
                                 <a href="dronesoccer.php?match_id=<?= $match['match_id'] ?>" class="button">進入比賽</a>
                                 <button onclick="deleteMatch(<?= $match['match_id'] ?>)" class="button delete-button">取消比賽</button>
-                            <?php elseif ($match['match_status'] === 'active'): ?>
-                                <a href="dronesoccer.php?match_id=<?= $match['match_id'] ?>" class="button">繼續比賽</a>
-                                <button onclick="completeMatch(<?= $match['match_id'] ?>)" class="button complete-button">完成比賽</button>
-                            <?php else: ?>
-                                <a href="match_result.php?match_id=<?= $match['match_id'] ?>" class="button result-button">顯示結果</a>
+                            <?php elseif ($match['match_status'] === 'completed'): ?>
+                                <a href="match_result.php?match_id=<?= $match['match_id'] ?>" class="button">顯示結果</a>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -190,3 +204,14 @@ function completeMatch(matchId) {
     }
 }
 </script>
+
+<style>
+    .winner-name {
+        color: #4CAF50;
+        font-weight: bold;
+        padding: 5px 10px;
+        background-color: #e8f5e9;
+        border-radius: 4px;
+        display: inline-block;
+    }
+</style>
