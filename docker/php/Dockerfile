@@ -10,7 +10,10 @@ WORKDIR /app
 COPY . .
 
 # 設置權限
-RUN chown -R www-data:www-data /app
+RUN chown -R www-data:www-data /app && \
+    chmod 755 /app && \
+    find /app/public -type d -exec chmod 755 {} \; && \
+    find /app/public -type f -exec chmod 644 {} \;
 
 # 暴露端口
 EXPOSE 9000

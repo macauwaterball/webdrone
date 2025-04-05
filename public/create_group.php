@@ -51,7 +51,7 @@ $groups = $stmt->fetchAll();
         <div class="form-section">
             <h2>創建新小組</h2>
             <?php if (isset($message)): ?>
-                <div class="success-message"><?= htmlspecialchars($message) ?></div>
+                <div class="success-message"><?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?></div>
             <?php endif; ?>
             <?php if (isset($error)): ?>
                 <div class="error-message"><?= htmlspecialchars($error) ?></div>

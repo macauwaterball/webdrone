@@ -19,9 +19,9 @@ $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $error = $_GET['error'] ?? '';
 
 // 獲取選定小組的現有場次
-$selected_group_id = $_POST['group_id'] ?? $_GET['group_id'] ?? null;
+$selected_group_id = isset($_POST['group_id']) && $_POST['group_id'] !== '' ? (int)$_POST['group_id'] : null;
 $existing_matches = [];
-if ($selected_group_id) {
+if ($selected_group_id !== null) {
     $stmt = $pdo->prepare("
         SELECT m.match_number, t1.team_name as team1_name, t2.team_name as team2_name
         FROM matches m
@@ -336,4 +336,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     </script>
 </body>
-</html> 
+</html>

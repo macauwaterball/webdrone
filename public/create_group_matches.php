@@ -96,6 +96,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // 將排好的賽程寫入數據庫
                 $stmt = $pdo->prepare("INSERT INTO matches (match_number, team1_id, team2_id, match_status, group_id) VALUES (?, ?, ?, 'pending', ?)");
                 foreach ($schedule as $index => $match) {
+                    if (!is_numeric($match['team1_id']) || !is_numeric($match['team2_id']) || !is_numeric($group_id)) {
+                        throw new Exception('無效的數字參數');
+                    }
                     $stmt->execute([
                         $index + 1,
                         $match['team1_id'],
@@ -176,27 +179,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
 
             <?php if (!empty($selected_group_id)): ?>
-                <form method="POST" class="create-form">
+                <?php
+                // 檢查該小組是否已有比賽
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM matches WHERE group_id = ?");
+                $stmt->execute([$selected_group_id]);
+                $hasExistingMatches = $stmt->fetchColumn() > 0;
+                
+                // 獲取所有隊伍（不分組）
+                $stmt = $pdo->query("SELECT t.*, g.group_name FROM teams t LEFT JOIN team_groups g ON t.group_id = g.group_id ORDER BY t.team_name");
+                $all_teams = $stmt->fetchAll();
+                
+                // 獲取該小組現有的隊伍ID
+                $group_team_ids = [];
+                $stmt = $pdo->prepare("SELECT team_id FROM teams WHERE group_id = ?");
+                $stmt->execute([$selected_group_id]);
+                $group_team_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                ?>
+                
+                <?php if ($hasExistingMatches): ?>
+                    <div class="warning-message" style="background-color: #fff3cd; padding: 15px; margin-bottom: 20px; border-left: 5px solid #ffc107;">
+                        <h3>警告：此小組已有比賽記錄</h3>
+                        <p>重新生成循環賽將會刪除所有現有比賽記錄，包括已完成比賽的結果。</p>
+                        <p>請先導出當前比賽記錄：</p>
+                        <a href="export_matches.php?group_id=<?= $selected_group_id ?>" 
+                           class="button" 
+                           style="background-color: #28a745; color: white; padding: 8px 15px; text-decoration: none; display: inline-block;">
+                            導出此小組比賽記錄
+                        </a>
+                    </div>
+                <?php endif; ?>
+                
+                <form method="POST" class="create-form" onsubmit="return confirm('確定要重新生成循環賽嗎？這將刪除所有現有比賽記錄！');">
                     <input type="hidden" name="group_id" value="<?= htmlspecialchars($selected_group_id) ?>">
                     
                     <div class="team-selection">
                         <h3>選擇參賽隊伍</h3>
-                        <?php foreach ($available_teams as $team): ?>
+                        <?php foreach ($all_teams as $team): ?>
                             <div class="team-checkbox">
                                 <input type="checkbox" name="teams[]" value="<?= htmlspecialchars($team['team_id']) ?>" 
-                                       id="team_<?= htmlspecialchars($team['team_id']) ?>">
+                                       id="team_<?= htmlspecialchars($team['team_id']) ?>"
+                                       <?= in_array($team['team_id'], $group_team_ids) ? 'checked' : '' ?>>
                                 <label for="team_<?= htmlspecialchars($team['team_id']) ?>">
                                     <?= htmlspecialchars($team['team_name']) ?>
-                                </label>
-                            </div>
-                        <?php endforeach; ?>
-                        
-                        <?php foreach ($group_teams as $team): ?>
-                            <div class="team-checkbox">
-                                <input type="checkbox" name="teams[]" value="<?= htmlspecialchars($team['team_id']) ?>" 
-                                       id="team_<?= htmlspecialchars($team['team_id']) ?>" checked>
-                                <label for="team_<?= htmlspecialchars($team['team_id']) ?>">
-                                    <?= htmlspecialchars($team['team_name']) ?>
+                                    <?php if ($team['group_id'] && $team['group_id'] != $selected_group_id): ?>
+                                        <span style="color: #999; font-size: 0.8em;">(<?= htmlspecialchars($team['group_name'] ?? '其他組') ?>組)</span>
+                                    <?php endif; ?>
                                 </label>
                             </div>
                         <?php endforeach; ?>

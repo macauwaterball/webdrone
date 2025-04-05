@@ -44,16 +44,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
+        // 處理 group_id 為空的情況
+        $group_id = !empty($_POST['group_id']) ? (int)$_POST['group_id'] : null;
+        
         try {
-            // 創建新比賽
-            $stmt = $pdo->prepare("INSERT INTO matches (match_number, team1_id, team2_id, group_id) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$match_number, $team1_id, $team2_id, $group_id]);
+            $stmt = $pdo->prepare("INSERT INTO matches (match_number, team1_id, team2_id, match_status, group_id) VALUES (?, ?, ?, 'pending', ?)");
+            $stmt->execute([
+                (int)$_POST['match_number'],
+                (int)$_POST['team1_id'],
+                (int)$_POST['team2_id'],
+                $group_id
+            ]);
             
-            // 重定向到比賽列表頁面，而不是比賽頁面
+            // 創建成功後重定向
             header("Location: list_matches.php");
             exit;
         } catch (PDOException $e) {
-            $errors[] = "創建比賽失敗: " . $e->getMessage();
+            // 錯誤處理
+            header("Location: create_match.php?error=" . urlencode("創建比賽失敗: " . $e->getMessage()));
+            exit;
         }
     }
 
@@ -67,4 +76,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 如果不是POST請求，重定向到創建頁面
     header("Location: create_match.php");
     exit;
-} 
+}

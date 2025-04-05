@@ -133,7 +133,14 @@ $matches = $pdo->query($query)->fetchAll();
                             <?php if ($match['match_status'] === 'completed'): ?>
                                 <?php
                                 $winner = '';
-                                if ($match['team1_score'] > $match['team2_score']) {
+                                // 先檢查是否有通過抽籤決定的勝者
+                                if ($match['winner_team_id']) {
+                                    $winner = ($match['winner_team_id'] == $match['team1_id']) 
+                                        ? $match['team1_name'] 
+                                        : $match['team2_name'];
+                                } 
+                                // 如果沒有抽籤勝者，則按分數和犯規判斷
+                                elseif ($match['team1_score'] > $match['team2_score']) {
                                     $winner = $match['team1_name'];
                                 } elseif ($match['team2_score'] > $match['team1_score']) {
                                     $winner = $match['team2_name'];

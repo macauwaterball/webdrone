@@ -16,6 +16,19 @@ try {
         // 更新比賽狀態為已完成
         $stmt = $pdo->prepare("UPDATE matches SET match_status = 'completed' WHERE match_id = ?");
         $stmt->execute([$match_id]);
+        
+        // 新增處理抽簽結果
+        if (isset($data['draw_winner'])) {
+            // 獲取獲勝隊伍ID
+            $stmt = $pdo->prepare("SELECT team{$data['draw_winner']}_id FROM matches WHERE match_id = ?");
+            $stmt->execute([$match_id]);
+            $winner_team_id = $stmt->fetchColumn();
+            
+            // 更新比賽記錄
+            $stmt = $pdo->prepare("UPDATE matches SET winner_team_id = ?, win_method = 'draw' WHERE match_id = ?");
+            $stmt->execute([$winner_team_id, $match_id]);
+        }
+        
         $response['success'] = true;
         $response['redirect'] = 'list_matches.php';
     } else {
@@ -31,7 +44,7 @@ try {
         }
 
         $team = $data['team'];
-        
+
         if (isset($data['score_change'])) {
             $field = "team{$team}_score";
             $change = $data['score_change'];
@@ -41,12 +54,13 @@ try {
             $stmt->execute([$match_id]);
             $current = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if ($current['current_score'] + $change < 0) {
+            if (!is_numeric($change) || $change > 100 || $change < -100) {
+                $response['error'] = '分數變動值無效';
+            } elseif ($current['current_score'] + $change < 0) {
                 $response['error'] = '分數不能為負數';
-                echo json_encode($response);
-                exit;
+            } elseif ($current['current_score'] + $change > 999) {
+                $response['error'] = '分數超過最大值';
             }
-            
             $stmt = $pdo->prepare("UPDATE matches SET $field = $field + ? WHERE match_id = ?");
             $stmt->execute([$change, $match_id]);
             
@@ -55,7 +69,7 @@ try {
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             $response['score'] = $result['score'];
         }
-        
+
         if (isset($data['foul_change'])) {
             $field = "team{$team}_fouls";
             $change = $data['foul_change'];
@@ -79,7 +93,7 @@ try {
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
             $response['fouls'] = $result['fouls'];
         }
-        
+
         $response['success'] = true;
     }
 } catch (PDOException $e) {

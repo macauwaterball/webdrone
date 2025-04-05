@@ -48,6 +48,7 @@ services:
     volumes:
       - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - mysql_data:/var/lib/mysql
+      - ./docker/mysql/data:/var/lib/mysql  # 新增這行，將數據存儲在主機上
     networks:
       - app-network
     healthcheck:
